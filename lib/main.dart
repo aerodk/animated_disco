@@ -108,7 +108,7 @@ class _MedicinGridState extends State<MedicinGrid> {
         child: const Icon(Icons.add),
       ),
       body: _isLoadingHive
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : GridView.custom(
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 120,
