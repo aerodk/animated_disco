@@ -70,10 +70,10 @@ class _MedicinGridState extends State<MedicinGrid> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addNewMedicin,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
       body: GridView.custom(
-        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 120, // Maksimal bredde for hver tile
           childAspectRatio: 1, // Forholdet mellem bredde og højde for hver tile
           crossAxisSpacing: 10, // Afstand mellem tiles horisontalt
@@ -91,16 +91,16 @@ class _MedicinGridState extends State<MedicinGrid> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Icon(Icons.medication, size: 24),
-                      SizedBox(height: 8),
+                      const Icon(Icons.medication, size: 24),
+                      const SizedBox(height: 8),
                       Text(
                         tile.name, // Brug navnet fra MedicinTile objektet
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         DateFormat('HH:mm').format(tile.time),
-                        style: TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ],
                   ),
@@ -124,7 +124,7 @@ class _MedicinGridState extends State<MedicinGrid> {
       // Brugeren skal trykke på knapper for at lukke dialogen
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Tilføj ny medicin'),
+          title: const Text('Tilføj ny medicin'),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return Column(
@@ -132,7 +132,7 @@ class _MedicinGridState extends State<MedicinGrid> {
                 children: <Widget>[
                   TextFormField(
                     autofocus: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Medicin navn',
                     ),
                     onChanged: (value) {
@@ -143,7 +143,7 @@ class _MedicinGridState extends State<MedicinGrid> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       IconButton(
-                        icon: Icon(Icons.remove),
+                        icon: const Icon(Icons.remove),
                         onPressed: () {
                           setState(() {
                             if (doseringInterval > 1) {
@@ -154,7 +154,7 @@ class _MedicinGridState extends State<MedicinGrid> {
                       ),
                       Text('$doseringInterval timer'),
                       IconButton(
-                        icon: Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         onPressed: () {
                           setState(() {
                             doseringInterval++;
@@ -169,13 +169,13 @@ class _MedicinGridState extends State<MedicinGrid> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuller'),
+              child: const Text('Annuller'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 DateTime nextDoseTime =
                     DateTime.now().add(Duration(hours: doseringInterval));
