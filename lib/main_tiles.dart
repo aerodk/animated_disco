@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -13,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MedicinGrid(),
+      home: const MedicinGrid(),
     );
   }
 }
@@ -24,6 +26,8 @@ class MedicinTile {
 }
 
 class MedicinGrid extends StatefulWidget {
+  const MedicinGrid({super.key});
+
   @override
   _MedicinGridState createState() => _MedicinGridState();
 }
@@ -47,7 +51,7 @@ class _MedicinGridState extends State<MedicinGrid> {
           tile.time.day,
           picked.hour,
           picked.minute,
-        ).add(Duration(hours: 4));
+        ).add(const Duration(hours: 4));
       });
     }
   }
@@ -56,10 +60,10 @@ class _MedicinGridState extends State<MedicinGrid> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medicin Skema'),
+        title: const Text('Medicin Skema'),
       ),
       body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 6,
           childAspectRatio: 1,
         ),
@@ -74,16 +78,16 @@ class _MedicinGridState extends State<MedicinGrid> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Icon(Icons.medication, size: 24),
-                  SizedBox(height: 8),
+                  const Icon(Icons.medication, size: 24),
+                  const SizedBox(height: 8),
                   Text(
                     'Medicin ${index + 1}',
-                    style: TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 12),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     DateFormat('HH:mm').format(tile.time),
-                    style: TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ],
               ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,17 +14,19 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MedicinListe(),
+      home: const MedicinListe(),
     );
   }
 }
 
 class MedicinListe extends StatelessWidget {
+  const MedicinListe({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medicin Skema'),
+        title: const Text('Medicin Skema'),
       ),
       body: ListView.builder(
         itemCount: 10, // Antal rækker i listen, kan ændres efter behov
@@ -34,13 +38,13 @@ class MedicinListe extends StatelessWidget {
                   child: Text('Medicin ${index + 1}'), // Medicin navn
                 ),
                 IconButton(
-                  icon: Icon(Icons.arrow_downward),
+                  icon: const Icon(Icons.arrow_downward),
                   onPressed: () {
                     // Tilføj handling for at tage medicin
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   onPressed: () {
                     // Tilføj handling for at slette medicin
                   },
@@ -55,7 +59,7 @@ class MedicinListe extends StatelessWidget {
         onPressed: () {
           // Tilføj handling for at tilføje ny medicin
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
