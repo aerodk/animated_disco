@@ -157,8 +157,8 @@ class _MedicinGridState extends State<MedicinGrid> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Bekræft Sletning"),
-          content: const Text("Er du sikker på, at du vil slette denne medicin?"),
+          title: const Text("Bekræft sletning"),
+          content: Text("Er du sikker på, at du vil slette '${medicinList.elementAt(index).name}'?"),
           actions: <Widget>[
             TextButton(
               child: const Text("Annuller"),
@@ -180,8 +180,7 @@ class _MedicinGridState extends State<MedicinGrid> {
   }
 
   void _deleteMedicin(int index) async {
-    final box = await Hive.openBox<MedicinTile>('medicinBox');
-    await box.deleteAt(index); // Slet fra Hive-boksen baseret på index
+    _hiveBox.then((value) => value.deleteAt(index)); // Slet fra Hive-boksen baseret på index
     setState(() {
       medicinList.removeAt(index); // Opdaterer listen, der vises i UI
     });
