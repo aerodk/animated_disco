@@ -85,6 +85,8 @@ class _MedicinGridState extends State<MedicinGrid> {
           picked.minute,
         ).add(const Duration(hours: 4));
       });
+
+      // Save new info
       tile.save();
     }
   }
@@ -108,46 +110,81 @@ class _MedicinGridState extends State<MedicinGrid> {
       body: _isLoadingHive
           ? Center(child: CircularProgressIndicator())
           : GridView.custom(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 120, // Maksimal bredde for hver tile
-                childAspectRatio:
-                    1, // Forholdet mellem bredde og højde for hver tile
-                crossAxisSpacing: 10, // Afstand mellem tiles horisontalt
-                mainAxisSpacing: 10, // Afstand mellem tiles vertikalt
-              ),
-              childrenDelegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  MedicinTile tile = medicinList[index];
-                  bool isPast = tile.time.isBefore(DateTime.now());
-                  return GestureDetector(
-                    onTap: () => _showTimePicker(tile),
-                    child: Card(
-                      color: isPast ? Colors.green : Colors.red,
-                      child: GridTile(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            const Icon(Icons.medication, size: 24),
-                            const SizedBox(height: 8),
-                            Text(
-                              tile.name, // Brug navnet fra MedicinTile objektet
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              DateFormat('HH:mm').format(tile.time),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 120,
+          childAspectRatio: 1,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        childrenDelegate: SliverChildBuilderDelegate(
+              (context, index) {
+            MedicinTile tile = medicinList[index];
+            bool isPast = tile.time.isBefore(DateTime.now());
+            return GestureDetector(
+              onTap: () => _showTimePicker(tile),
+              onLongPress: () => _confirmDeletion(context, index),
+              child: Card(
+                color: isPast ? Colors.green : Colors.red,
+                child: GridTile(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      const Icon(Icons.medication, size: 24),
+                      const SizedBox(height: 8),
+                      Text(
+                        tile.name,
+                        style: const TextStyle(fontSize: 12),
                       ),
-                    ),
-                  );
-                },
-                childCount: medicinList.length,
+                      const SizedBox(height: 8),
+                      Text(
+                        DateFormat('HH:mm').format(tile.time),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            );
+          },
+          childCount: medicinList.length,
+        ),
+      ),
     );
+  }
+
+  void _confirmDeletion(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Bekræft Sletning"),
+          content: const Text("Er du sikker på, at du vil slette denne medicin?"),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Annuller"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Slet"),
+              onPressed: () {
+                _deleteMedicin(index);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteMedicin(int index) async {
+    final box = await Hive.openBox<MedicinTile>('medicinBox');
+    await box.deleteAt(index); // Slet fra Hive-boksen baseret på index
+    setState(() {
+      medicinList.removeAt(index); // Opdaterer listen, der vises i UI
+    });
   }
 
   void _addNewMedicin() async {
