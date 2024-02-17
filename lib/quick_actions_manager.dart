@@ -24,7 +24,7 @@ class QuickActionsManager {
     );
 
     // Opdatér quick actions
-    final QuickActions quickActions = QuickActions();
+    const QuickActions quickActions = QuickActions();
     quickActions.setShortcutItems(items);
   }
 }
