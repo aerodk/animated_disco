@@ -6864,6 +6864,10 @@ path_provider_platform_interface
 path_provider_windows
 platform
 plugin_platform_interface
+quick_actions
+quick_actions_android
+quick_actions_ios
+quick_actions_platform_interface
 xdg_directories
 
 Copyright 2013 The Flutter Authors. All rights reserved.
