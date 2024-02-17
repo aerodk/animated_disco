@@ -1,8 +1,10 @@
+import 'package:animated_disco/quick_actions_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:quick_actions/quick_actions.dart';
 
 import 'medicin_tile.dart';
 
@@ -37,21 +39,45 @@ class MedicinGridState extends State<MedicinGrid> {
   late Future<Box<MedicinTile>> _hiveBox;
   bool _isLoadingHive = true;
 
+  bool _hiveInit = false;
+
   @override
   void initState() {
     super.initState();
     // Initialiser Hive
     _loadMedicinTiles();
+    _setupQuickActions();
+  }
+
+  void _setupQuickActions() async {
+    await _initHive();
+    const QuickActions quickActions = QuickActions();
+    quickActions.initialize((String shortcutType) {
+      // Her kan du håndtere dine quick actions
+      if (shortcutType.startsWith("dose")) {
+        _handleQuickAction(shortcutType);
+      } else {
+        if (kDebugMode) {
+          print("Unknown shortcut type received $shortcutType");
+        }
+      }
+    });
+    QuickActionsManager().updateQuickActions();
+  }
+
+  void _handleQuickAction(String dosis) async {
+    String doseOf = dosis.substring(5);
+
+    var box = await _hiveBox; //Hive.openBox<MedicinTile?>('medicinBox');
+    MedicinTile? medOf = box.values
+        .firstWhere((element) => element.name == doseOf);
+    medOf.registerDose();
+    medOf.save();
   }
 
   void _loadMedicinTiles() async {
     _isLoadingHive = true;
-    if (!kIsWeb) {
-      // Kun kald Hive.init med en sti, når det ikke er på web
-      final dir = await getApplicationDocumentsDirectory();
-      Hive.init(dir.path);
-    }
-    Hive.registerAdapter(MedicinTileAdapter());
+    await _initHive();
     // Åbn en Hive-boks asynkront
     _hiveBox = Hive.openBox<MedicinTile>('medicinBox');
     _hiveBox.then((box) {
@@ -68,6 +94,18 @@ class MedicinGridState extends State<MedicinGrid> {
         _isLoadingHive = false;
       });
     });
+  }
+
+  Future<void> _initHive() async {
+    if (!kIsWeb) {
+      // Kun kald Hive.init med en sti, når det ikke er på web
+      final dir = await getApplicationDocumentsDirectory();
+      Hive.init(dir.path);
+    }
+    if (!_hiveInit) {
+      Hive.registerAdapter(MedicinTileAdapter());
+      _hiveInit = true;
+    }
   }
 
   void _showTimePicker(MedicinTile tile) async {
@@ -93,13 +131,15 @@ class MedicinGridState extends State<MedicinGrid> {
         ).add(Duration(hours: tile.doseringInterval));
       });
 
-      // Save new info in Hive
+      // Update dosage and save new info in Hive
+      tile.registerDose();
       tile.save();
     }
   }
 
   @override
   void dispose() {
+    _hiveInit = false;
     Hive.close();
     super.dispose();
   }
@@ -163,8 +203,6 @@ class MedicinGridState extends State<MedicinGrid> {
   void _showEditMedicinDialog(
       BuildContext context, MedicinTile tile, int index) async {
     // Opret TextEditingController for hvert felt du ønsker at redigere
-    final TextEditingController nameController =
-        TextEditingController(text: tile.name);
     final TextEditingController doseringIntervalController =
         TextEditingController(text: tile.doseringInterval.toString());
 
@@ -172,24 +210,10 @@ class MedicinGridState extends State<MedicinGrid> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Rediger medicin"),
+          title: Text("Rediger ${tile.name}"),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    //Text("Medicin Navn", style: TextStyle(fontWeight: FontWeight.bold)),
-                    TextFormField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        hintText: "Indtast medicinens navn",
-                        // Tilføj label til inputfeltet også, hvis ønsket
-                        labelText: "Medicin Navn",
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 20),
                 // Tilføj lidt afstand mellem felterne
                 Column(
@@ -228,7 +252,6 @@ class MedicinGridState extends State<MedicinGrid> {
               onPressed: () {
                 // Opdater tile med de nye værdier
                 setState(() {
-                  tile.name = nameController.text;
                   tile.doseringInterval =
                       int.tryParse(doseringIntervalController.text) ??
                           tile.doseringInterval;
@@ -278,14 +301,41 @@ class MedicinGridState extends State<MedicinGrid> {
   }
 
   void _addNewMedicin() async {
-    String medicinNavn = '';
-    int doseringInterval = 4;
-
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      // Brugeren skal trykke på knapper for at lukke dialogen
       builder: (BuildContext context) {
+        String medicinNavn = '';
+        int doseringInterval = 4;
+        String? fejlMeddelelse;
+
+        List<Widget> buildActions(StateSetter setState) {
+          return <Widget>[
+            TextButton(
+              child: const Text('Annuller'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              onPressed: fejlMeddelelse != null ? null : () async {
+                DateTime nextDoseTime = DateTime.now().subtract(Duration(hours: doseringInterval));
+                var medicinTile = MedicinTile(
+                  name: medicinNavn,
+                  time: nextDoseTime,
+                  doseringInterval: doseringInterval,
+                );
+                await _hiveBox.then((value) => value.add(medicinTile));
+                setState(() {
+                  medicinList.add(medicinTile);
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ];
+        }
+
         return AlertDialog(
           title: const Text('Tilføj ny medicin'),
           content: StatefulBuilder(
@@ -295,67 +345,24 @@ class MedicinGridState extends State<MedicinGrid> {
                 children: <Widget>[
                   TextFormField(
                     autofocus: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Medicin navn',
+                      errorText: fejlMeddelelse,
                     ),
                     onChanged: (value) {
                       medicinNavn = value;
+                      bool used = medicinList.any((element) => element.name.toLowerCase() == value.toLowerCase());
+                      setState(() {
+                        fejlMeddelelse = used ? 'Medicinnavnet eksisterer allerede' : null;
+                      });
                     },
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        onPressed: () {
-                          setState(() {
-                            if (doseringInterval > 1) {
-                              doseringInterval--;
-                            }
-                          });
-                        },
-                      ),
-                      Text('$doseringInterval timer'),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () {
-                          setState(() {
-                            doseringInterval++;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
+                  // Din Row widget for doseringInterval
                 ],
               );
             },
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Annuller'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                DateTime nextDoseTime =
-                    DateTime.now().add(Duration(hours: doseringInterval));
-                var medicinTile = MedicinTile(
-                    name: medicinNavn,
-                    time: nextDoseTime,
-                    doseringInterval: doseringInterval);
-                _hiveBox.then((value) => value.add(medicinTile));
-                setState(() {
-                  medicinList.add(
-                    medicinTile,
-                  );
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+          actions: buildActions((state) {}),
         );
       },
     );

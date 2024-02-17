@@ -20,19 +20,22 @@ class MedicinTileAdapter extends TypeAdapter<MedicinTile> {
       name: fields[0] as String,
       time: fields[1] as DateTime,
       doseringInterval: fields[2] as int,
+      doseAmount: fields[3] == null ? 0 : fields[3] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, MedicinTile obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
       ..write(obj.time)
       ..writeByte(2)
-      ..write(obj.doseringInterval);
+      ..write(obj.doseringInterval)
+      ..writeByte(3)
+      ..write(obj.doseAmount);
   }
 
   @override
