@@ -50,6 +50,10 @@ class MedicinGridState extends State<MedicinGrid> {
   }
 
   void _setupQuickActions() async {
+    if(kIsWeb) {
+      return;
+    }
+
     await _initHive();
     const QuickActions quickActions = QuickActions();
     quickActions.initialize((String shortcutType) {
@@ -318,17 +322,19 @@ class MedicinGridState extends State<MedicinGrid> {
               },
             ),
             TextButton(
-              onPressed: fejlMeddelelse != null ? null : () async {
-                DateTime nextDoseTime = DateTime.now().subtract(Duration(hours: doseringInterval));
-                var medicinTile = MedicinTile(
-                  name: medicinNavn,
-                  time: nextDoseTime,
-                  doseringInterval: doseringInterval,
-                );
-                await _hiveBox.then((value) => value.add(medicinTile));
-                setState(() {
-                  medicinList.add(medicinTile);
-                });
+              onPressed: () async {
+                if(fejlMeddelelse == null) {
+                  DateTime nextDoseTime = DateTime.now().subtract(Duration(hours: doseringInterval));
+                  var medicinTile = MedicinTile(
+                    name: medicinNavn,
+                    time: nextDoseTime,
+                    doseringInterval: doseringInterval,
+                  );
+                  await _hiveBox.then((value) => value.add(medicinTile));
+                  setState(() {
+                    medicinList.add(medicinTile);
+                  });
+                }
                 Navigator.of(context).pop();
               },
               child: const Text('OK'),
