@@ -129,7 +129,7 @@ class _MedicinGridState extends State<MedicinGrid> {
             bool isPast = tile.time.isBefore(DateTime.now());
             return GestureDetector(
               onTap: () => _showTimePicker(tile),
-              onLongPress: () => _confirmDeletion(context, index),
+              onLongPress: () => _showEditMedicinDialog(context, tile, index),
               child: Card(
                 color: isPast ? Colors.green : Colors.red,
                 child: GridTile(
@@ -159,24 +159,74 @@ class _MedicinGridState extends State<MedicinGrid> {
     );
   }
 
-  void _confirmDeletion(BuildContext context, int index) {
+  void _showEditMedicinDialog(BuildContext context, MedicinTile tile, int index) async {
+    // Opret TextEditingController for hvert felt du ønsker at redigere
+    final TextEditingController nameController = TextEditingController(text: tile.name);
+    final TextEditingController doseringIntervalController = TextEditingController(text: tile.doseringInterval.toString());
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Bekræft sletning"),
-          content: Text("Er du sikker på, at du vil slette '${medicinList.elementAt(index).name}'?"),
+          title: const Text("Rediger medicin"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    //Text("Medicin Navn", style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: "Indtast medicinens navn",
+                        // Tilføj label til inputfeltet også, hvis ønsket
+                        labelText: "Medicin Navn",
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20), // Tilføj lidt afstand mellem felterne
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Text("Dosering Interval (timer)", style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextFormField(
+                      controller: doseringIntervalController,
+                      decoration: InputDecoration(
+                        hintText: "Indtast dosering interval i timer",
+                        // Tilføj label til inputfeltet også, hvis ønsket
+                        labelText: "Dosering Interval",
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text("Annuller"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: const Text("Slet"),
               onPressed: () {
-                _deleteMedicin(index);
+                _deleteMedicin(context, index);
+                // _confirmDeletion(context, index); // Implementer _deleteMedicin som før
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Gem"),
+              onPressed: () {
+                // Opdater tile med de nye værdier
+                setState(() {
+                  tile.name = nameController.text;
+                  tile.doseringInterval = int.tryParse(doseringIntervalController.text) ?? tile.doseringInterval;
+                  tile.save(); // Gem ændringerne i Hive
+                });
                 Navigator.of(context).pop();
               },
             ),
@@ -186,12 +236,36 @@ class _MedicinGridState extends State<MedicinGrid> {
     );
   }
 
-  void _deleteMedicin(int index) async {
-    _hiveBox.then((value) => value.deleteAt(index)); // Slet fra Hive-boksen baseret på index
+  void _deleteMedicin(BuildContext context, int index) {
+    // Gem en kopi af den slettede MedicinTile, før du sletter den
+    MedicinTile deletedTile = medicinList[index];
+    int? deletedTileKey = deletedTile.key; // Antager at MedicinTile er et HiveObject og har en unik nøgle
+
+    // Fjern tile fra listen og Hive-boksen
     setState(() {
-      medicinList.removeAt(index); // Opdaterer listen, der vises i UI
+      medicinList.removeAt(index);
+      Hive.box<MedicinTile>('medicinBox').delete(deletedTileKey);
     });
+
+    // Vis en SnackBar med en fortryd-knap
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Medicin ''${deletedTile.name} slettet'),
+        action: SnackBarAction(
+          label: 'Fortryd',
+          onPressed: () {
+            // Gendan den slettede MedicinTile, hvis brugeren fortryder
+            setState(() {
+              Hive.box<MedicinTile>('medicinBox').put(deletedTileKey, deletedTile);
+              medicinList.insert(index, deletedTile); // Indsæt den gendannede tile på dens oprindelige plads
+            });
+          },
+        ),
+        duration: Duration(seconds: 5), // Giver brugeren 5 sekunder til at reagere
+      ),
+    );
   }
+
 
   void _addNewMedicin() async {
     String medicinNavn = '';
