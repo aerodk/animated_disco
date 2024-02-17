@@ -82,17 +82,18 @@ class _MedicinGridState extends State<MedicinGrid> {
              },
     );
     if (picked != null) {
+      var day = DateTime.now();
       setState(() {
         tile.time = DateTime(
-          tile.time.year,
-          tile.time.month,
-          tile.time.day,
+          day.year,
+          day.month,
+          day.day,
           picked.hour,
           picked.minute,
-        ).add(const Duration(hours: 4));
+        ).add(Duration(hours: tile.doseringInterval));
       });
 
-      // Save new info
+      // Save new info in Hive
       tile.save();
     }
   }
