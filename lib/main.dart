@@ -178,7 +178,7 @@ class _MedicinGridState extends State<MedicinGrid> {
                     //Text("Medicin Navn", style: TextStyle(fontWeight: FontWeight.bold)),
                     TextFormField(
                       controller: nameController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: "Indtast medicinens navn",
                         // Tilføj label til inputfeltet også, hvis ønsket
                         labelText: "Medicin Navn",
@@ -186,14 +186,14 @@ class _MedicinGridState extends State<MedicinGrid> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20), // Tilføj lidt afstand mellem felterne
+                const SizedBox(height: 20), // Tilføj lidt afstand mellem felterne
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Text("Dosering Interval (timer)", style: TextStyle(fontWeight: FontWeight.bold)),
                     TextFormField(
                       controller: doseringIntervalController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: "Indtast dosering interval i timer",
                         // Tilføj label til inputfeltet også, hvis ønsket
                         labelText: "Dosering Interval",
@@ -261,7 +261,7 @@ class _MedicinGridState extends State<MedicinGrid> {
             });
           },
         ),
-        duration: Duration(seconds: 5), // Giver brugeren 5 sekunder til at reagere
+        duration: const Duration(seconds: 5), // Giver brugeren 5 sekunder til at reagere
       ),
     );
   }
