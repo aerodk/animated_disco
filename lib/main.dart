@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Medicin Skema',
+      title: 'Medicin tracker',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -29,10 +29,10 @@ class MedicinGrid extends StatefulWidget {
   const MedicinGrid({super.key});
 
   @override
-  _MedicinGridState createState() => _MedicinGridState();
+  MedicinGridState createState() => MedicinGridState();
 }
 
-class _MedicinGridState extends State<MedicinGrid> {
+class MedicinGridState extends State<MedicinGrid> {
   List<MedicinTile> medicinList = [];
   late Future<Box<MedicinTile>> _hiveBox;
   bool _isLoadingHive = true;
@@ -74,12 +74,12 @@ class _MedicinGridState extends State<MedicinGrid> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-        builder: (BuildContext context, Widget? child) {
-               return MediaQuery(
-                 data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-                 child: child!,
-               );
-             },
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       var day = DateTime.now();
@@ -108,7 +108,7 @@ class _MedicinGridState extends State<MedicinGrid> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medicin Skema'),
+        title: const Text('Medicin tracker'),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addNewMedicin,
@@ -117,52 +117,56 @@ class _MedicinGridState extends State<MedicinGrid> {
       body: _isLoadingHive
           ? const Center(child: CircularProgressIndicator())
           : GridView.custom(
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 120,
-          childAspectRatio: 1,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
-        childrenDelegate: SliverChildBuilderDelegate(
-              (context, index) {
-            MedicinTile tile = medicinList[index];
-            bool isPast = tile.time.isBefore(DateTime.now());
-            return GestureDetector(
-              onTap: () => _showTimePicker(tile),
-              onLongPress: () => _showEditMedicinDialog(context, tile, index),
-              child: Card(
-                color: isPast ? Colors.green : Colors.red,
-                child: GridTile(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      const Icon(Icons.medication, size: 24),
-                      const SizedBox(height: 8),
-                      Text(
-                        tile.name,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        DateFormat('HH:mm').format(tile.time),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 120,
+                childAspectRatio: 1,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
               ),
-            );
-          },
-          childCount: medicinList.length,
-        ),
-      ),
+              childrenDelegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  MedicinTile tile = medicinList[index];
+                  bool isPast = tile.time.isBefore(DateTime.now());
+                  return GestureDetector(
+                    onTap: () => _showTimePicker(tile),
+                    onLongPress: () =>
+                        _showEditMedicinDialog(context, tile, index),
+                    child: Card(
+                      color: isPast ? Colors.green : Colors.red,
+                      child: GridTile(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            const Icon(Icons.medication, size: 24),
+                            const SizedBox(height: 8),
+                            Text(
+                              tile.name,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              DateFormat('HH:mm').format(tile.time),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                childCount: medicinList.length,
+              ),
+            ),
     );
   }
 
-  void _showEditMedicinDialog(BuildContext context, MedicinTile tile, int index) async {
+  void _showEditMedicinDialog(
+      BuildContext context, MedicinTile tile, int index) async {
     // Opret TextEditingController for hvert felt du ønsker at redigere
-    final TextEditingController nameController = TextEditingController(text: tile.name);
-    final TextEditingController doseringIntervalController = TextEditingController(text: tile.doseringInterval.toString());
+    final TextEditingController nameController =
+        TextEditingController(text: tile.name);
+    final TextEditingController doseringIntervalController =
+        TextEditingController(text: tile.doseringInterval.toString());
 
     showDialog(
       context: context,
@@ -186,7 +190,8 @@ class _MedicinGridState extends State<MedicinGrid> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20), // Tilføj lidt afstand mellem felterne
+                const SizedBox(height: 20),
+                // Tilføj lidt afstand mellem felterne
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -224,7 +229,9 @@ class _MedicinGridState extends State<MedicinGrid> {
                 // Opdater tile med de nye værdier
                 setState(() {
                   tile.name = nameController.text;
-                  tile.doseringInterval = int.tryParse(doseringIntervalController.text) ?? tile.doseringInterval;
+                  tile.doseringInterval =
+                      int.tryParse(doseringIntervalController.text) ??
+                          tile.doseringInterval;
                   tile.save(); // Gem ændringerne i Hive
                 });
                 Navigator.of(context).pop();
@@ -239,7 +246,8 @@ class _MedicinGridState extends State<MedicinGrid> {
   void _deleteMedicin(BuildContext context, int index) {
     // Gem en kopi af den slettede MedicinTile, før du sletter den
     MedicinTile deletedTile = medicinList[index];
-    int? deletedTileKey = deletedTile.key; // Antager at MedicinTile er et HiveObject og har en unik nøgle
+    int? deletedTileKey = deletedTile
+        .key; // Antager at MedicinTile er et HiveObject og har en unik nøgle
 
     // Fjern tile fra listen og Hive-boksen
     setState(() {
@@ -250,22 +258,24 @@ class _MedicinGridState extends State<MedicinGrid> {
     // Vis en SnackBar med en fortryd-knap
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Medicin ''${deletedTile.name} slettet'),
+        content: Text('Medicin ' '${deletedTile.name} slettet'),
         action: SnackBarAction(
           label: 'Fortryd',
           onPressed: () {
             // Gendan den slettede MedicinTile, hvis brugeren fortryder
             setState(() {
-              Hive.box<MedicinTile>('medicinBox').put(deletedTileKey, deletedTile);
-              medicinList.insert(index, deletedTile); // Indsæt den gendannede tile på dens oprindelige plads
+              Hive.box<MedicinTile>('medicinBox')
+                  .put(deletedTileKey, deletedTile);
+              medicinList.insert(index,
+                  deletedTile); // Indsæt den gendannede tile på dens oprindelige plads
             });
           },
         ),
-        duration: const Duration(seconds: 5), // Giver brugeren 5 sekunder til at reagere
+        duration: const Duration(
+            seconds: 5), // Giver brugeren 5 sekunder til at reagere
       ),
     );
   }
-
 
   void _addNewMedicin() async {
     String medicinNavn = '';
